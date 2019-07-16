@@ -1,0 +1,115 @@
+\documentclass[10pt,a4paper,onecolumn]{article}
+\usepackage[left=0.75in, right=0.75in, top=1.00in, bottom=1.00in]{geometry}
+
+%opening
+\title{Political Ideology Bias Detection with BERT}
+\author{Ahsen Qamar and Alex Dauenhauer}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Abstract: TBD
+\end{abstract}
+
+\section{Introduction}
+\paragraph{}
+Political ideology bias in news sources is a topic of growing concern, not just in the U.S., but across the entire world. As our country grows ever more partisan and misinformation campaigns fuel distrust in mainstream news sources, people have a tendency to turn to alternative news sources which typically reflect the existing ideology bias of the author. This creates echo chambers and reinforces existing partisan ideologies driving the partisan divide ever wider. If biased text could be labeled in a way that informed the reader that the content they were consuming was biased, this could help readers to "take it with a grain of salt" and potentially look for less biased sources. A system like this could also help media sources reduce the amount of bias they include their reporting, using a this tool as a proofreader of sorts which could eventually, hopefully reduce the amount of bias in media and reduce the growing partisan divide.
+
+In this paper, we build off of previous work done by Iyyer et al., etc...
+
+would like to expand this section...
+
+\section{Model}
+\paragraph{}
+Ahsen for BERT model
+
+Need to figure out the document roll up using averaging or L2 norm or something
+
+\section{Data}
+\paragraph{}
+We performed experiments on three separate datasets: Annotated congressional floor debates \cite{convote}, the Ideological Books Corpus (IBC) (Gross et al. 2013) as well as the all-the-news dataset from Kaggle user Andrew Thompson. In this section we will describe the content of each dataset and preparations made to each dataset for use in our model.
+
+
+\subsection{Convote}
+\paragraph{}
+The Convote dataset is a corpus of congressional speeches with each speech treated as a document with automatically derived labels of the speaker's political party (D, for Democrat; R, for Republican; I for Independent) as well as other related extracted information that was not pertinent to our experiments. Since our work attempts to predict ideological bias rather than political party, we relabel each document by mapping Democrat to "liberal", Republican to "conservative" and Independent to "neutral". While the mapping of political party directly to political bias is not always a 1:1 relationship, there is a strong correlation between political party and political ideology. Further, we expect that our method for filtering the dataset for biased sentences will wash out noise that would be seen from speeches made by moderate centrists on either side of the aisle.
+
+\subsubsection{Filtering for Bias at the Sentence Level}
+\paragraph{}
+It would be extremely unreasonable to assume that every sentence spoken by a member of congress during a congressional debate would contain ideological bias. In fact, a large portion of the sentences in the Convote dataset contain no bias at all.
+\footnote{Many sentences are simply opinion statements on whether or not the speaker agrees with the bill, or parliamentary jargon such as addressing the Speaker of the House, or urging their colleagues to vote a certain way, etc.} Therefore, it is necessary to filter this dataset for sentences that explicitly contain bias. 
+
+To select the explicitly biased sentences from the dataset, we used a method inspired by Yano, et al. \cite{YanoBigrams} and shown to be successful as a bias identifier by Iyyer, et al. \cite{iyyerRNN} We started by identifying the most frequently used bigrams for each label (liberal and conservative). After removing bigrams that contained stopwords, English names, we then took the set difference of the resulting top 1000 most frequent liberal and conservative bigrams (i.e. out of the top 1000 liberal bigrams, we only kept those that did not appear in the top 1000 conservative bigrams and vice versa). This left us with 486 bigrams from each label and we kept the top 200 bigrams of this resulting set as our bias indicators. We then filtered sentences such that, if a democratic speaker spoke a sentence that contained one of these top 200 "liberal" bigrams, we labeled that sentence as liberal and used the same logic to identify conservative sentences. For this dataset, we identified a neutral sentence as one which was spoken by an independent politician and contained no bigrams from either the liberal or conservative bias indicators. The top 10 bigrams from each label are shown in Table \ref{tab:bigrams}
+
+\begin{table}[h!]
+	\begin{center}
+		\caption{Top 10 bigrams per ideology label}
+		\label{tab:bigrams}
+		\begin{tabular}{c|c}
+			\hline\hline
+			\textbf{Liberal} & \textbf{Conservative}\\
+			\hline
+			republican budget & house resolution \\
+			republican leadership & new jobs \\
+			strong opposition & immediate consideration \\
+			cbc budget & restaurant association \\
+			child left & class members \\
+			oil companies & lawsuit abuse \\
+			tax breaks & commission report \\
+			congressional black & thank chairman \\
+			black caucus & contractors association \\
+			national debt & pension protection \\
+			\hline\hline
+		\end{tabular}
+	\end{center}
+\end{table}
+
+
+The resulting dataset included 2831 conservative sentences, 3678 liberal sentences and 184 neutral sentences.
+
+\begin{table}[h!]
+	\begin{center}
+		\caption{Sample sentences from each ideology label}
+		\label{tab:convote-sentences}
+		\begin{tabular}{c|c|c}
+			\hline\hline
+			\textbf{Liberal} & \textbf{Conservative} & \textbf{Neutral}\\
+			\hline
+			america is awash in red ink because of republican budget irresponsibility. & we can do that with technology and a national sales tax , and fix this balance of trade. & congress says , yes , boss , that is what we are going to do , and this is , in fact , what has happened. \\
+			nearly half of these tax cuts will go directly into the pockets of the 1 in 500 taxpayers who earn more than \$1 million per year. & what the patriot act did in both national security letters as well as in delayed notification warrants was simply to extend to anti-terrorism investigations authorities that already existed and up until that time had been found constitutional in investigations such as mafia investigations , racketeering investigations , and drug-trafficking investigations . & mr. speaker , can i inquire again as to how much time remains?\\
+			\hline\hline& 
+		\end{tabular}
+	\end{center}
+\end{table}
+
+
+
+['liberal'
+'i have yet to hear the president urge oil , coal , utility , and energy companies to reduce their costs .']
+['liberal'
+'america is awash in red ink because of republican budget irresponsibility .']
+
+'liberal'
+'nearly half of these tax cuts will go directly into the pockets of the 1 in 500 taxpayers who earn more than \$1 million per year .']
+['liberal'
+"the republicans are clamoring in the senate about the lack of up or down votes on judges and , today , they denied the house not only an up or down vote on the so-called `` real id '' act , but even a real debate on this issue ."]
+
+\section{Experiments/Results}
+\paragraph{}
+TBD after we run some experiments
+
+
+\section{Future Research}
+\paragraph{}
+We will build a HAN model using BERT as our encoder. Will need to find or create better document level 
+
+\section{Conclusion}
+\paragraph{}
+TBD
+
+\bibliographystyle{plain}
+\bibliography{bibliography}
+
+\end{document}

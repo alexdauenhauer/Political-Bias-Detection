@@ -1,0 +1,24 @@
+\begin{thebibliography}{1}
+
+\bibitem{iyyerRNN}
+Mohit Iyyer, Peter Enns, Jordan Boyd-Graber, and Philip Resnik.
+\newblock Political ideology detection using recursive neural networks.
+\newblock In {\em Proceedings of the 52nd Annual Meeting of the Association for
+  Computational Linguistics (Volume 1: Long Papers)}, pages 1113--1122,
+  Baltimore, Maryland, June 2014. Association for Computational Linguistics.
+
+\bibitem{convote}
+Matt Thomas, Bo~Pang, and Lillian Lee.
+\newblock Get out the vote: Determining support or opposition from
+  congressional floor-debate transcripts.
+\newblock {\em CoRR}, abs/cs/0607062, 2006.
+
+\bibitem{YanoBigrams}
+Tae Yano, Philip Resnik, and Noah~A. Smith.
+\newblock Shedding (a thousand points of) light on biased language.
+\newblock In {\em Proceedings of the NAACL HLT 2010 Workshop on Creating Speech
+  and Language Data with Amazon's Mechanical Turk}, CSLDAMT '10, pages
+  152--158, Stroudsburg, PA, USA, 2010. Association for Computational
+  Linguistics.
+
+\end{thebibliography}
