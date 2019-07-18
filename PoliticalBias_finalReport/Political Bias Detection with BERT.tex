@@ -29,72 +29,169 @@ Need to figure out the document roll up using averaging or L2 norm or something
 
 \section{Data}
 \paragraph{}
-We performed experiments on three separate datasets: Annotated congressional floor debates \cite{convote}, the Ideological Books Corpus (IBC) (Gross et al. 2013) as well as the all-the-news dataset from Kaggle user Andrew Thompson. In this section we will describe the content of each dataset and preparations made to each dataset for use in our model.
+Political bias at the sentence level is a very subjective topic and therefore, there are not many large corpora widely available for use. A large part of this project was devoted to acquiring and preparing a few existing corpora, as well as repurposing a few processing methods on new corpora to develop our own biased sentence corpus. We performed experiments on three separate datasets: Annotated congressional floor debates\cite{convote}, the Ideological Books Corpus (IBC)\cite{iyyerRNN} as well as the all-the-news dataset from Kaggle user Andrew Thompson. In this section we will describe the content of each dataset and preparations made to each dataset for use in our model.
 
 
 \subsection{Convote}
 \paragraph{}
 The Convote dataset is a corpus of congressional speeches with each speech treated as a document with automatically derived labels of the speaker's political party (D, for Democrat; R, for Republican; I for Independent) as well as other related extracted information that was not pertinent to our experiments. Since our work attempts to predict ideological bias rather than political party, we relabel each document by mapping Democrat to "liberal", Republican to "conservative" and Independent to "neutral". While the mapping of political party directly to political bias is not always a 1:1 relationship, there is a strong correlation between political party and political ideology. Further, we expect that our method for filtering the dataset for biased sentences will wash out noise that would be seen from speeches made by moderate centrists on either side of the aisle.
 
-\subsubsection{Filtering for Bias at the Sentence Level}
+\subsubsection{Filtering Convote for Bias at the Sentence Level}
+\label{sec:filtering}
 \paragraph{}
-It would be extremely unreasonable to assume that every sentence spoken by a member of congress during a congressional debate would contain ideological bias. In fact, a large portion of the sentences in the Convote dataset contain no bias at all.
-\footnote{Many sentences are simply opinion statements on whether or not the speaker agrees with the bill, or parliamentary jargon such as addressing the Speaker of the House, or urging their colleagues to vote a certain way, etc.} Therefore, it is necessary to filter this dataset for sentences that explicitly contain bias. 
+It would be extremely unreasonable to assume that every sentence spoken by a member of congress during a congressional debate would contain ideological bias. In fact, a large portion of the sentences in the Convote dataset contain no bias at all.\footnote{Many sentences are simply opinion statements on whether or not the speaker agrees with the bill, or parliamentary jargon such as addressing the Speaker of the House, or urging their colleagues to vote a certain way, etc.} Therefore, it is necessary to filter this dataset for sentences that explicitly contain bias. 
 
-To select the explicitly biased sentences from the dataset, we used a method inspired by Yano, et al. \cite{YanoBigrams} and shown to be successful as a bias identifier by Iyyer, et al. \cite{iyyerRNN} We started by identifying the most frequently used bigrams for each label (liberal and conservative). After removing bigrams that contained stopwords, English names, we then took the set difference of the resulting top 1000 most frequent liberal and conservative bigrams (i.e. out of the top 1000 liberal bigrams, we only kept those that did not appear in the top 1000 conservative bigrams and vice versa). This left us with 486 bigrams from each label and we kept the top 200 bigrams of this resulting set as our bias indicators. We then filtered sentences such that, if a democratic speaker spoke a sentence that contained one of these top 200 "liberal" bigrams, we labeled that sentence as liberal and used the same logic to identify conservative sentences. For this dataset, we identified a neutral sentence as one which was spoken by an independent politician and contained no bigrams from either the liberal or conservative bias indicators. The top 10 bigrams from each label are shown in Table \ref{tab:bigrams}
+To select the explicitly biased sentences from the dataset, we used a method inspired by Yano, et al. \cite{YanoBigrams} and shown to be successful as a bias identifier by Iyyer, et al. \cite{iyyerRNN} We started by identifying the most frequently used trigrams and bigrams for each label (liberal and conservative). After removing n-grams that contained stopwords, and English names, we then filtered the bigrams further by requiring that at least one word in the bigram contain an "opinion" defined as a word found in the \texttt{opinion\_lexicon} corpus from NLTK. We then took the set difference of the resulting top 1000 most frequent liberal and conservative n-grams (i.e. out of the top 1000 liberal bigrams, we only kept those that did not appear in the top 1000 conservative bigrams and vice versa, same for trigrams). This left us with 665 bigrams from each label and 751 trigrams from each label. We kept the top 100 bigrams and top 100 trigrams for each label as our bias indicators. We then filtered sentences such that, if a democratic speaker spoke a sentence that contained one of these top 200 "liberal" n-grams, we labeled that sentence as "liberal" and used the same logic to identify conservative sentences. For this dataset, we identified a neutral sentence as one which was spoken by an independent politician and contained no n-grams from either the liberal or conservative bias indicators. The top 10 n-grams from each label are shown in Table \ref{tab:ngrams-convote}.
 
 \begin{table}[h!]
 	\begin{center}
-		\caption{Top 10 bigrams per ideology label}
-		\label{tab:bigrams}
-		\begin{tabular}{c|c}
+		\caption{Top 10 n-grams per ideology label - Convote}
+		\label{tab:ngrams-convote}
+		\begin{tabular}{p{0.2\linewidth}|p{0.2\linewidth}|p{0.2\linewidth}|p{0.2\linewidth}}
 			\hline\hline
-			\textbf{Liberal} & \textbf{Conservative}\\
+			\multicolumn{2}{c|}{\textbf{Liberal}} & \multicolumn{2}{c|}{\textbf{Conservative}} \\
 			\hline
-			republican budget & house resolution \\
-			republican leadership & new jobs \\
-			strong opposition & immediate consideration \\
-			cbc budget & restaurant association \\
-			child left & class members \\
-			oil companies & lawsuit abuse \\
-			tax breaks & commission report \\
-			congressional black & thank chairman \\
-			black caucus & contractors association \\
-			national debt & pension protection \\
+			Trigrams & Bigrams & Trigrams & Bigrams \\
+			\hline
+			social security trust & tax breaks & national electrical contractors & community protection \\
+			security trust fund & security trust & electrical contractors association & free market \\
+			cbc alternative budget & bad policy & legislative days within & organized crime \\
+			black caucus budget & would lose & inner cell mass & bankruptcy relief \\
+			estate tax relief & reduce crime & head start program & good news \\
+			privatize social security & budget reconciliation & community protection act & relief extension \\
+			u.s. trade deficit & ethical standard & million new jobs & delayed notification \\
+			republican budget resolution & fiscally irresponsible & death tax repeal & soft money \\
+			national wildlife refuge & working poor & 9/11 commission report & illegal aliens \\
+			guardian ad litem & subpoena power & stem cells without & invasive species \\
 			\hline\hline
 		\end{tabular}
 	\end{center}
 \end{table}
 
 
-The resulting dataset included 2831 conservative sentences, 3678 liberal sentences and 184 neutral sentences.
+The resulting dataset included 1326 conservative sentences, 1383 liberal sentences and 213 neutral sentences. Example sentences from each ideology label are shown in Table \ref{tab:convote-sentences}.
 
 \begin{table}[h!]
 	\begin{center}
-		\caption{Sample sentences from each ideology label}
+		\caption{Sample sentences from each ideology label - Convote}
 		\label{tab:convote-sentences}
-		\begin{tabular}{c|c|c}
+		\begin{tabular}{p{0.3\linewidth}|p{0.3\linewidth}|p{0.3\linewidth}}
 			\hline\hline
 			\textbf{Liberal} & \textbf{Conservative} & \textbf{Neutral}\\
 			\hline
-			america is awash in red ink because of republican budget irresponsibility. & we can do that with technology and a national sales tax , and fix this balance of trade. & congress says , yes , boss , that is what we are going to do , and this is , in fact , what has happened. \\
-			nearly half of these tax cuts will go directly into the pockets of the 1 in 500 taxpayers who earn more than \$1 million per year. & what the patriot act did in both national security letters as well as in delayed notification warrants was simply to extend to anti-terrorism investigations authorities that already existed and up until that time had been found constitutional in investigations such as mafia investigations , racketeering investigations , and drug-trafficking investigations . & mr. speaker , can i inquire again as to how much time remains?\\
-			\hline\hline& 
+			mr. speaker, during a time of war, in the aftermath of a catastrophic hurricane, with 45 million americans lacking health insurance and skyrocketing home heating costs projected this winter, this majority is proposing to take from those with the least, give to those with the most -- and tell our children they will have to pay for it all later. & on both the business records and delayed notification sections of the patriot act (among others), the stance of the american civil liberties union and like-minded critics seems to have an ulterior motive. & let us look at what is going on in america today. \\
+			it is clear that there would be plenty of money to deal with the social security trust fund if the president were not using the social security trust fund as a slush fund to give tax cuts to the wealthiest people in america. & that legislation helped to streamline the intelligence community and tightened some asylum rules that allowed potential terrorists to remain in our country. & mr. speaker, parliamentary inquiry. \\
+			\hline\hline
 		\end{tabular}
 	\end{center}
 \end{table}
 
+\subsection{IBC}
+\paragraph{}
+The Ideological Books Corpus was provided to us in a fully processed format, courtesy of Iyyer et al.\cite{iyyerRNN} The original IBC dataset, originally developed by Gross et al.\cite{gross2013ibc} is a collection of books and articles written between 2008 and 2012 by well-known authors with strong political leanings. What Iyyer's team did was to filter this corpus using a similar strategy to the strategy outlined in section \ref{sec:filtering}. They then crowd-sourced manual ideological bias annotations of the resulting sentences and particular subphrases. We use the data in this processed form as is, with no further processing.
 
+\subsection{All-the-news Kaggle corpus}
+\paragraph{}
+To expand our training data further with a greater diversity of authors, we turned to a Kaggle corpus of 142,570 news articles from 15 different publishers as provided by Andrew Thompson\cite{news}. We assigned each publisher a bias label, sourced from mediabiasfactcheck.com (MBFC), then we simplified these labels down to the same labels we used in the previous datasets: liberal, conservative and neutral. The labels assigned to each publisher are shown in Table \ref{tab:pub-bias}. 
 
-['liberal'
-'i have yet to hear the president urge oil , coal , utility , and energy companies to reduce their costs .']
-['liberal'
-'america is awash in red ink because of republican budget irresponsibility .']
+\begin{table}[h!]
+	\begin{center}
+		\caption{Publisher and bias labels from all-the-news corpus}
+		\label{tab:pub-bias}
+		\begin{tabular}{c|c|c}
+			\hline\hline
+			\textbf{Publisher} & \textbf{MBFC Bias Label} & \textbf{Simplified Bias Label} \\
+			\hline
+			New York Times & left-center & liberal \\
+			Breitbart & extreme-right & conservative \\
+			CNN & left & liberal \\
+			Business Insider & left-center & liberal \\
+			Atlantic & left-center & liberal \\
+			Fox News & right & conservative \\
+			Talking Points Memo & left & liberal \\
+			Buzzfeed News & left-center & liberal \\
+			National Review & right & conservative \\
+			New York Post & right-center & conservative \\
+			Guardian & left-center & liberal \\
+			NPR & left-center & liberal \\
+			Reuters & neutral & neutral \\
+			Vox & left & liberal \\
+			Washington Post & left-center & liberal \\
+			\hline\hline
+		\end{tabular}
+	\end{center}
+\end{table}
 
-'liberal'
-'nearly half of these tax cuts will go directly into the pockets of the 1 in 500 taxpayers who earn more than \$1 million per year .']
-['liberal'
-"the republicans are clamoring in the senate about the lack of up or down votes on judges and , today , they denied the house not only an up or down vote on the so-called `` real id '' act , but even a real debate on this issue ."]
+\subsubsection{Filtering All-the-news for Bias at the Sentence Level}
+\label{sec:filtering2}
+\paragraph{}
+Because the language used in a congressional debates is quite different than the language typically used in journalism, the bigrams that we found in the Convote dataset don't crossover very well to the all-the-news dataset. Therefore we determine a new set of n-grams for the news article dataset. We applied a similar filtering method to the one explained in section \ref{sec:filtering} to filter sentences containing explicit bias.
+
+We first took a subset of publishers with the most extreme MBFC bias labels to determine biased bigrams from. This subset is shown in Table \ref{tab:biasBigramSubset}.
+
+\begin{table}[h!]
+	\begin{center}
+		\caption{Subset of news publishers for n-gram selection}
+		\label{tab:biasBigramSubset}
+		\begin{tabular}{c|c|c}
+			\hline\hline
+			\textbf{Publisher} & \textbf{MBFC Bias Label} & \textbf{Simplified Bias Label} \\
+			\hline
+			Breitbart & extreme-right & conservative \\
+			Fox News & right & conservative \\
+			National Review & right & conservative \\
+			CNN & left & liberal \\
+			Talking Points Memo & left & liberal \\
+			Vox & left & liberal \\
+			Reuters & neutral & neutral \\
+			\hline\hline
+		\end{tabular}
+	\end{center}
+\end{table}
+
+From this subset, we selected n-grams that indicate bias similarly to the methods applied to the Convote set\footnote{We removed stopwords using a custom stopwords list, removed English names and required bigrams to include one "opinion" word. This is to remove boilerplate sentences and taglines such as "associated press", "bestselling author", "conservative columnist", etc.}. The resulting n-grams are shown in Table \ref{tab:bigrams-atn}. 
+
+\begin{table}[h!]
+	\begin{center}
+		\caption{Top 10 n-grams per ideology label - All-the-news}
+		\label{tab:bigrams-atn}
+		\begin{tabular}{p{0.2\linewidth}|p{0.2\linewidth}|p{0.2\linewidth}|p{0.2\linewidth}}
+			\hline\hline
+			\multicolumn{2}{c|}{\textbf{Liberal}} & \multicolumn{2}{c|}{\textbf{Conservative}} \\
+			\hline
+			Trigrams & Bigrams & Trigrams & Bigrams \\
+			\hline
+			senior administration official & fast facts & battleground prediction map & illegal aliens \\
+			green card holders & opioid epidemic & jerusalem bureau chief & illegal alien \\
+			greenhouse gas emissions & health reform & popular weekend talk & illegal immigrant \\
+			north korean leader & lethal injection & tweetsa question needing & migrant crisis \\
+			federal civil rights & budget reconciliation & voter suppression cost & popular weekend \\
+			provocative narrative essays & chronic pain & says voter suppression & patriot channel \\
+			health care policy & lead poisoning & border patrol agent & hard truths \\
+			republican health care & intelligence committees & electionhillary blames america & limited government \\
+			gop health care & prison sentences & blames america firsthillary & islamic terror \\
+			civil rights laws & rights advocates & america firsthillary says & twin falls \\
+			\hline\hline
+		\end{tabular}
+	\end{center}
+\end{table}
+
+Using these n-grams to select sentences that contained bias led to a dataset which contained 
+
+\begin{table}[h!]
+	\begin{center}
+		\caption{Sample sentences from each ideology label - All-the-news	}
+		\label{tab:atn-sentences}
+		\begin{tabular}{p{0.3\linewidth}|p{0.3\linewidth}|p{0.3\linewidth}}
+			\hline\hline
+			\textbf{Liberal} & \textbf{Conservative} & \textbf{Neutral}\\
+			\hline
+			Here’s what you need to know: American divisions are rapidly widening over President Trump’s order to close the U. S. to refugees and people from seven predominantly Muslim countries. & And the costs of illegal alien crime continued to mount and a lethal opioid epidemic raged. & Showcasing their attempts to unite with other groups for the election, Islamists campaigned with Awdeh Qawwas, a prominent priest, in the affluent Abdoun district of the capital Amman. \\
+			In a video posted on her campaign’s Facebook page shortly after Mr. Sanders departed the White House grounds to visit the Capitol, Mr. Obama described Mrs. Clinton as the most qualified candidate to seek the White House, and implored Democrats to come together to elect her after a divisive party primary. & Obama’s claim of civic peace is also at odds with the televised evidence: dramatic race riots, cop killings, rapes, murders, illegal alien crimes, and chaos that rippled across the country during the second term of his presidency. & Rousseff’s survival hinges on winning over a dwindling number of undecided lawmakers who are also being courted by the man poised to take over if she is ousted, Vice President Michel Temer. \\
+			\hline\hline
+		\end{tabular}
+	\end{center}
+\end{table}
 
 \section{Experiments/Results}
 \paragraph{}

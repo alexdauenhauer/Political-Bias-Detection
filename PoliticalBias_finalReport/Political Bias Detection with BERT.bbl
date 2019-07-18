@@ -1,5 +1,12 @@
 \begin{thebibliography}{1}
 
+\bibitem{gross2013ibc}
+Justin Gross, Brice Acree, Yanchuan Sim, and Noah~A. Smith.
+\newblock Testing the {Etch-a-Sketch} hypothesis: A computational analysis of
+  {Mitt Romney}'s ideological makeover during the 2012 primary vs. general
+  elections.
+\newblock In {\em APSA 2013 Annual Meeting Paper}, Chicago, IL, USA, 2013.
+
 \bibitem{iyyerRNN}
 Mohit Iyyer, Peter Enns, Jordan Boyd-Graber, and Philip Resnik.
 \newblock Political ideology detection using recursive neural networks.
@@ -12,6 +19,10 @@ Matt Thomas, Bo~Pang, and Lillian Lee.
 \newblock Get out the vote: Determining support or opposition from
   congressional floor-debate transcripts.
 \newblock {\em CoRR}, abs/cs/0607062, 2006.
+
+\bibitem{news}
+Andrew Thompson.
+\newblock All the news: 143,000 articles from 15 american publications, 2017.
 
 \bibitem{YanoBigrams}
 Tae Yano, Philip Resnik, and Noah~A. Smith.
