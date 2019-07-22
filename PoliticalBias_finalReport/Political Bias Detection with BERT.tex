@@ -1,5 +1,8 @@
 \documentclass[10pt,a4paper,onecolumn]{article}
 \usepackage[left=0.75in, right=0.75in, top=1.00in, bottom=1.00in]{geometry}
+\usepackage{url}
+\usepackage{xcolor,colortbl}
+\definecolor{Gray}{gray}{0.85}
 
 %opening
 \title{Political Ideology Bias Detection with BERT}
@@ -14,12 +17,11 @@ Abstract: TBD
 \end{abstract}
 
 \section{Introduction}
+\label{intro}
 \paragraph{}
-Political ideology bias in news sources is a topic of growing concern, not just in the U.S., but across the entire world. As our country grows ever more partisan and misinformation campaigns fuel distrust in mainstream news sources, people have a tendency to turn to alternative news sources which typically reflect the existing ideology bias of the author. This creates echo chambers and reinforces existing partisan ideologies driving the partisan divide ever wider. If biased text could be labeled in a way that informed the reader that the content they were consuming was biased, this could help readers to "take it with a grain of salt" and potentially look for less biased sources. A system like this could also help media sources reduce the amount of bias they include their reporting, using a this tool as a proofreader of sorts which could eventually, hopefully reduce the amount of bias in media and reduce the growing partisan divide.
+Political ideology bias in news sources is a topic of growing concern, not just in the U.S., but across the entire world. As our country grows ever more partisan and misinformation campaigns fuel distrust in mainstream news sources, people have a tendency to turn to alternative news sources which typically reflect the existing ideology bias of the author. This creates echo chambers and reinforces existing partisan ideologies driving the partisan divide ever wider. The ability to automatically label biased text could inform readers that may have otherwise assumed the content was neutral, and encourage them to pursue alternative sources with less bias, or at the very least maintain a degree of skepticism about the content they are consuming. A system like this could also help media sources reduce the amount of bias they include their reporting, some of which may be unconscious and therefore undetected by writers or editors. Using this tool as a proofreader of sorts could eventually, hopefully reduce the amount of bias in media and reduce the growing partisan divide.
 
-In this paper, we build off of previous work done by Iyyer et al., etc...
-
-would like to expand this section...
+In this paper, we build off of previous work done by Iyyer et al. \cite{iyyerRNN}. Their success in using an RNN model to predict ideological bias at the sentence level, inspired us to expand on their experiments and attempt to improve on their performance using modern state-of-the-art tools such as BERT \cite{bert}. We use BERT for sequence classification to predict ideological bias at the sentence level on the Ideological Books Corpus as well as the Convote dataset, both of which are described in greater detail in section \ref{sec:data}. Additionally, we build a new dataset using news articles from 15 different publishers, with bias labels sourced from mediabiasfactcheck.com (MBFC) \cite{mbfc}. We predict bias at the sentence level, then use the aggregate sentence level predictions to predict bias at a document level and compare to the publisher label assigned by the MBFC team.
 
 \section{Model}
 \paragraph{}
@@ -28,20 +30,24 @@ Ahsen for BERT model
 Need to figure out the document roll up using averaging or L2 norm or something
 
 \section{Data}
+\label{sec:data}
 \paragraph{}
-Political bias at the sentence level is a very subjective topic and therefore, there are not many large corpora widely available for use. A large part of this project was devoted to acquiring and preparing a few existing corpora, as well as repurposing a few processing methods on new corpora to develop our own biased sentence corpus. We performed experiments on three separate datasets: Annotated congressional floor debates\cite{convote}, the Ideological Books Corpus (IBC)\cite{iyyerRNN} as well as the all-the-news dataset from Kaggle user Andrew Thompson. In this section we will describe the content of each dataset and preparations made to each dataset for use in our model.
+Political bias at the sentence level is a very subjective topic and therefore, there are not many large corpora widely available for use. A large part of this project was devoted to acquiring and preparing a few existing corpora, as well as repurposing a few processing methods on new corpora to develop our own biased sentence corpus. We performed experiments on three separate datasets: the Ideological Books Corpus (IBC) \cite{iyyerRNN}, Annotated congressional floor debates \cite{convote}, and the all-the-news dataset from Kaggle user Andrew Thompson \cite{news}. In this section we will describe the content of each dataset and processing steps performed on each dataset for use in our model.
 
+\subsection{IBC}
+\paragraph{}
+The Ideological Books Corpus was provided to us in a fully processed format, courtesy of Iyyer et al.\cite{iyyerRNN} The original IBC dataset, developed by Gross et al.\cite{gross2013ibc} is a collection of books and articles written between 2008 and 2012 by well-known authors with strong political leanings. What Iyyer et al. did was to filter this corpus using a similar strategy to the strategy outlined in section \ref{sec:filtering}\footnote{Iyyer's team used bigrams and unigrams as their bias detectors, whereas we use trigrams and bigrams as ours}. They then crowd-sourced manual ideological bias annotations of the resulting sentences and particular subphrases. We use the data in this processed form as is, with no further processing.
 
 \subsection{Convote}
 \paragraph{}
-The Convote dataset is a corpus of congressional speeches with each speech treated as a document with automatically derived labels of the speaker's political party (D, for Democrat; R, for Republican; I for Independent) as well as other related extracted information that was not pertinent to our experiments. Since our work attempts to predict ideological bias rather than political party, we relabel each document by mapping Democrat to "liberal", Republican to "conservative" and Independent to "neutral". While the mapping of political party directly to political bias is not always a 1:1 relationship, there is a strong correlation between political party and political ideology. Further, we expect that our method for filtering the dataset for biased sentences will wash out noise that would be seen from speeches made by moderate centrists on either side of the aisle.
+The Convote dataset is a corpus of congressional speeches with each speech treated as a document with automatically derived labels of the speaker's political party (D, for Democrat; R, for Republican; I for Independent) as well as other related extracted information that was not pertinent to our experiments. Since our work attempts to predict ideological bias rather than political party, we relabel each document by mapping Democrat to "liberal", Republican to "conservative" and Independent to "neutral" (while we realize that a politician of Independent party certainly does not imply that politician's dialogue will be neutral, we use this label to select sentences that contain no bias detectors from either ideology which is explained further in section \ref{sec:filtering}). While it is true that the mapping of political party directly to political bias is not always a 1:1 relationship, there is a strong correlation between political party and political ideology. Further, we expect that our method for filtering the dataset for biased sentences will wash out noise that would be seen from speeches made by moderate centrists on either side of the aisle.
 
 \subsubsection{Filtering Convote for Bias at the Sentence Level}
 \label{sec:filtering}
 \paragraph{}
 It would be extremely unreasonable to assume that every sentence spoken by a member of congress during a congressional debate would contain ideological bias. In fact, a large portion of the sentences in the Convote dataset contain no bias at all.\footnote{Many sentences are simply opinion statements on whether or not the speaker agrees with the bill, or parliamentary jargon such as addressing the Speaker of the House, or urging their colleagues to vote a certain way, etc.} Therefore, it is necessary to filter this dataset for sentences that explicitly contain bias. 
 
-To select the explicitly biased sentences from the dataset, we used a method inspired by Yano, et al. \cite{YanoBigrams} and shown to be successful as a bias identifier by Iyyer, et al. \cite{iyyerRNN} We started by identifying the most frequently used trigrams and bigrams for each label (liberal and conservative). After removing n-grams that contained stopwords, and English names, we then filtered the bigrams further by requiring that at least one word in the bigram contain an "opinion" defined as a word found in the \texttt{opinion\_lexicon} corpus from NLTK. We then took the set difference of the resulting top 1000 most frequent liberal and conservative n-grams (i.e. out of the top 1000 liberal bigrams, we only kept those that did not appear in the top 1000 conservative bigrams and vice versa, same for trigrams). This left us with 665 bigrams from each label and 751 trigrams from each label. We kept the top 100 bigrams and top 100 trigrams for each label as our bias indicators. We then filtered sentences such that, if a democratic speaker spoke a sentence that contained one of these top 200 "liberal" n-grams, we labeled that sentence as "liberal" and used the same logic to identify conservative sentences. For this dataset, we identified a neutral sentence as one which was spoken by an independent politician and contained no n-grams from either the liberal or conservative bias indicators. The top 10 n-grams from each label are shown in Table \ref{tab:ngrams-convote}.
+To select the explicitly biased sentences from the dataset, we used a method inspired by Yano, et al. \cite{YanoBigrams} and shown to be successful as a bias identifier by Iyyer, et al. We started by identifying the most frequently used trigrams and bigrams for each label (liberal and conservative). We then filtered out any trigrams or bigrams which contained stopwords, and English names\footnote{Removing stopwords serves the purpose of eliminating trigrams and bigrams that don't contain substance for bias. Removing English names was a strategy that proved effective in filtering the all-the-news dataset, and was applied here as well, but essentially serves the purpose of removing n-grams that are sourced from replies to other speakers that address the other speaker by name}. We then filtered the bigrams further by requiring that at least one word in the bigram contain an "opinion" defined as a word found in the \texttt{opinion\_lexicon} corpus from NLTK\footnote{This method intends to select only those phrases that contain an ideological opinion which would typically be seen as a strong indicator of bias, when spoken by someone with known political affiliation. We decided to not make this a requirement for the trigrams as we felt these phrases would be unique enough to each ideology as they were that we did not want to lose information by filtering too heavily.}. We then took the set difference of the resulting top 1000 most frequent liberal and conservative n-grams (i.e. out of the top 1000 liberal bigrams, we only kept those that did not appear in the top 1000 conservative bigrams and vice versa, same for trigrams). This left us with 665 bigrams from each label and 751 trigrams from each label. We kept the top 100 filtered bigrams and top 100 filtered trigrams for each label as our bias indicators. We then filtered sentences such that, if a democratic speaker spoke a sentence that contained one of these top 200 "liberal" n-grams, we labeled that sentence as "liberal" and used the same logic applied to republican speakers to identify "conservative" sentences. For this dataset, we identified a neutral sentence as one which was spoken by an independent politician and contained no n-grams from either the liberal or conservative bias indicators. The top 10 n-grams from each label are shown in Table \ref{tab:ngrams-convote}. The resulting dataset included 1326 conservative sentences, 1383 liberal sentences and 213 neutral sentences. Example sentences from each ideology label are shown in Table \ref{tab:convote-sentences}.
 
 \begin{table}[h!]
 	\begin{center}
@@ -68,9 +74,6 @@ To select the explicitly biased sentences from the dataset, we used a method ins
 	\end{center}
 \end{table}
 
-
-The resulting dataset included 1326 conservative sentences, 1383 liberal sentences and 213 neutral sentences. Example sentences from each ideology label are shown in Table \ref{tab:convote-sentences}.
-
 \begin{table}[h!]
 	\begin{center}
 		\caption{Sample sentences from each ideology label - Convote}
@@ -86,13 +89,9 @@ The resulting dataset included 1326 conservative sentences, 1383 liberal sentenc
 	\end{center}
 \end{table}
 
-\subsection{IBC}
-\paragraph{}
-The Ideological Books Corpus was provided to us in a fully processed format, courtesy of Iyyer et al.\cite{iyyerRNN} The original IBC dataset, originally developed by Gross et al.\cite{gross2013ibc} is a collection of books and articles written between 2008 and 2012 by well-known authors with strong political leanings. What Iyyer's team did was to filter this corpus using a similar strategy to the strategy outlined in section \ref{sec:filtering}. They then crowd-sourced manual ideological bias annotations of the resulting sentences and particular subphrases. We use the data in this processed form as is, with no further processing.
-
 \subsection{All-the-news Kaggle corpus}
 \paragraph{}
-To expand our training data further with a greater diversity of authors, we turned to a Kaggle corpus of 142,570 news articles from 15 different publishers as provided by Andrew Thompson\cite{news}. We assigned each publisher a bias label, sourced from mediabiasfactcheck.com (MBFC), then we simplified these labels down to the same labels we used in the previous datasets: liberal, conservative and neutral. The labels assigned to each publisher are shown in Table \ref{tab:pub-bias}. 
+To expand our training data further with a greater diversity of authors, we turned to a Kaggle corpus of 142,570 news articles from 15 different publishers as provided by Andrew Thompson \cite{news}. We assigned each publisher a bias label, sourced from mediabiasfactcheck.com (MBFC), then we simplified these labels down to the same labels we used in the previous datasets: liberal, conservative and neutral. The labels assigned to each publisher are shown in Table \ref{tab:pub-bias}. 
 
 \begin{table}[h!]
 	\begin{center}
@@ -103,18 +102,24 @@ To expand our training data further with a greater diversity of authors, we turn
 			\textbf{Publisher} & \textbf{MBFC Bias Label} & \textbf{Simplified Bias Label} \\
 			\hline
 			New York Times & left-center & liberal \\
+			\rowcolor{Gray}
 			Breitbart & extreme-right & conservative \\
+			\rowcolor{Gray}
 			CNN & left & liberal \\
 			Business Insider & left-center & liberal \\
 			Atlantic & left-center & liberal \\
+			\rowcolor{Gray}
 			Fox News & right & conservative \\
+			\rowcolor{Gray}
 			Talking Points Memo & left & liberal \\
 			Buzzfeed News & left-center & liberal \\
 			National Review & right & conservative \\
 			New York Post & right-center & conservative \\
 			Guardian & left-center & liberal \\
 			NPR & left-center & liberal \\
+			\rowcolor{Gray}
 			Reuters & neutral & neutral \\
+			\rowcolor{Gray}
 			Vox & left & liberal \\
 			Washington Post & left-center & liberal \\
 			\hline\hline
@@ -125,31 +130,7 @@ To expand our training data further with a greater diversity of authors, we turn
 \subsubsection{Filtering All-the-news for Bias at the Sentence Level}
 \label{sec:filtering2}
 \paragraph{}
-Because the language used in a congressional debates is quite different than the language typically used in journalism, the bigrams that we found in the Convote dataset don't crossover very well to the all-the-news dataset. Therefore we determine a new set of n-grams for the news article dataset. We applied a similar filtering method to the one explained in section \ref{sec:filtering} to filter sentences containing explicit bias.
-
-We first took a subset of publishers with the most extreme MBFC bias labels to determine biased bigrams from. This subset is shown in Table \ref{tab:biasBigramSubset}.
-
-\begin{table}[h!]
-	\begin{center}
-		\caption{Subset of news publishers for n-gram selection}
-		\label{tab:biasBigramSubset}
-		\begin{tabular}{c|c|c}
-			\hline\hline
-			\textbf{Publisher} & \textbf{MBFC Bias Label} & \textbf{Simplified Bias Label} \\
-			\hline
-			Breitbart & extreme-right & conservative \\
-			Fox News & right & conservative \\
-			National Review & right & conservative \\
-			CNN & left & liberal \\
-			Talking Points Memo & left & liberal \\
-			Vox & left & liberal \\
-			Reuters & neutral & neutral \\
-			\hline\hline
-		\end{tabular}
-	\end{center}
-\end{table}
-
-From this subset, we selected n-grams that indicate bias similarly to the methods applied to the Convote set\footnote{We removed stopwords using a custom stopwords list, removed English names and required bigrams to include one "opinion" word. This is to remove boilerplate sentences and taglines such as "associated press", "bestselling author", "conservative columnist", etc.}. The resulting n-grams are shown in Table \ref{tab:bigrams-atn}. 
+Because the language used in a congressional debates is quite different than the language typically used in everyday journalism, the n-grams that we found in the Convote dataset don't crossover very well to the all-the-news dataset. Therefore we determine a new set of n-grams for the news article dataset. We applied a similar filtering method to the one explained in section \ref{sec:filtering} to filter sentences containing explicit bias. We first took a subset of publishers with the most extreme MBFC bias labels to determine biased n-grams from. This subset is indicated by the highlighted rows in Table \ref{tab:pub-bias}. From this subset, we selected n-grams that indicate bias similarly to the methods applied to the Convote set\footnote{We removed stopwords using a custom stopwords list, removed English names and required bigrams to include one "opinion" word. This is to remove boilerplate sentences, sentences that reference the author of a particular article and taglines such as "associated press", "bestselling author", "conservative columnist", etc.}. The resulting n-grams are shown in Table \ref{tab:bigrams-atn}. Using these n-grams to select sentences that contained bias led to a dataset which contained 16,745 conservative sentences, 28,230 liberal sentences, 277,751 neutral sentences. To balance the dataset and avoid weighting strategies while training, we pared this down to a random selection of 16,000 sentences from each label, for a total of 48,000 sentences. 
 
 \begin{table}[h!]
 	\begin{center}
@@ -161,22 +142,21 @@ From this subset, we selected n-grams that indicate bias similarly to the method
 			\hline
 			Trigrams & Bigrams & Trigrams & Bigrams \\
 			\hline
-			senior administration official & fast facts & battleground prediction map & illegal aliens \\
-			green card holders & opioid epidemic & jerusalem bureau chief & illegal alien \\
-			greenhouse gas emissions & health reform & popular weekend talk & illegal immigrant \\
-			north korean leader & lethal injection & tweetsa question needing & migrant crisis \\
-			federal civil rights & budget reconciliation & voter suppression cost & popular weekend \\
-			provocative narrative essays & chronic pain & says voter suppression & patriot channel \\
-			health care policy & lead poisoning & border patrol agent & hard truths \\
-			republican health care & intelligence committees & electionhillary blames america & limited government \\
-			gop health care & prison sentences & blames america firsthillary & islamic terror \\
-			civil rights laws & rights advocates & america firsthillary says & twin falls \\
+			senior administration official & opioid epidemic & jerusalem bureau chief & illegal aliens \\
+			greenhouse gas emissions & health reform & border patrol agent & illegal alien \\
+			north korean leader & lethal injection & social justice warriors & illegal immigrant \\
+			federal civil rights & healthy people & black panther party & migrant crisis \\
+			provocative narrative essays & racial bias & cartel chronicles project & patriot channel \\
+			clean air act & budget reconciliation & refugee resettlement program & hard truths \\
+			health care policy & chronic pain & prison sentence commuted & twin falls \\
+			republican health care & lead poisoning & god less america & islamic terror \\
+			gop health care & intelligence committees & real clear politics & snarky opinions \\
+			civil rights laws & rights advocates & face certain death & dangerous faggot\footnotemark \\
 			\hline\hline
 		\end{tabular}
 	\end{center}
 \end{table}
-
-Using these n-grams to select sentences that contained bias led to a dataset which contained 
+\footnotetext{The extreme offensiveness of this bigram led us to investigate its origins further. The presence of this bigram is not actually due to conservative media using slurs like this commonly enough to rank in our top ten list. Instead it is actually a reference to "The Dangerous Faggot Tour" which is a campus speaking tour of Milo Yiannopoulos, a prominent contributor to Breitbart News. This is not to condone the use of this offensive slur, just to explain its origins and presence in this list a bit more clearly}
 
 \begin{table}[h!]
 	\begin{center}
@@ -197,14 +177,15 @@ Using these n-grams to select sentences that contained bias led to a dataset whi
 \paragraph{}
 TBD after we run some experiments
 
-
-\section{Future Research}
-\paragraph{}
-We will build a HAN model using BERT as our encoder. Will need to find or create better document level 
-
 \section{Conclusion}
 \paragraph{}
 TBD
+
+\section*{Future Research}
+\paragraph{}
+To expand on this project in the future, we would like to experiment with different bias detection methods in the source data. Use of n-grams with $ n > 3 $, alternative filtering methods such generating an opinion list customized to our dataset, or possibly investigating other techniques from the field of political science. 
+
+To further develop this model and improve the usefulness of it at the document level, we would also like to incorporate BERT as an encoder in a Hierarchical Attention Network (HAN). In the most simplistic description, the HAN model encodes words into word vectors, then uses an attention mechanism to aggregate these into a sentence vector. Then the model repeats the process using the sentence vector with an attention mechanism to aggregate the sentences into a document vector for classification. We would like to incorporate BERT as our encoder in the HAN architecture which we believe would improve performance at the document level. We also will need to drastically improve the bias labels at the document level from the datasets we currently have available. This may involve a crowdsourcing task. Unfortunately we were not aware of the HAN model at the start of this project and when we found the architecture we did not have enough time to broaden our scope and incorporate it into this project.
 
 \bibliographystyle{plain}
 \bibliography{bibliography}
