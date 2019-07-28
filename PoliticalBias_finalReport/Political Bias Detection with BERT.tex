@@ -2,6 +2,10 @@
 \usepackage[left=0.75in, right=0.75in, top=1.00in, bottom=1.00in]{geometry}
 \usepackage{url}
 \usepackage{xcolor,colortbl}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,
+linkcolor=red}
+\usepackage{graphicx}
 \definecolor{Gray}{gray}{0.85}
 
 %opening
@@ -23,11 +27,20 @@ Political ideology bias in news sources is a topic of growing concern, not just 
 
 In this paper, we build off of previous work done by Iyyer et al. \cite{iyyerRNN}. Their success in using an RNN model to predict ideological bias at the sentence level, inspired us to expand on their experiments and attempt to improve on their performance using modern state-of-the-art tools such as BERT \cite{bert}. We use BERT for sequence classification to predict ideological bias at the sentence level on the Ideological Books Corpus as well as the Convote dataset, both of which are described in greater detail in section \ref{sec:data}. Additionally, we build a new dataset using news articles from 15 different publishers, with bias labels sourced from mediabiasfactcheck.com (MBFC) \cite{mbfc}. We predict bias at the sentence level, then use the aggregate sentence level predictions to predict bias at a document level and compare to the publisher label assigned by the MBFC team.
 
-\section{Model}
+\section{Model \& Architecture}
 \paragraph{}
-Ahsen for BERT model
+BERT (Bidirectional Encoder Representations from Transformers) was released late last year by Google. The main draw towards the use of BERT for this project was leveraging the bi-directional training transformer to help detect political bias in text. For more information regarding BERT please refer to this \href{https://arxiv.org/abs/1810.04805}{research paper} from Google.
 
-Need to figure out the document roll up using averaging or L2 norm or something
+A cloud instance hosting an Nvidia P100 GPU was our environment for hosting our data as well as deploying our model for testing. This infrastructure limited us to use the BERT \textit{base} models. No significant difference was found between \textit{cased} and \textit{uncased} so we decided to move forward with \textit{BERT-Base, Cased}. The decision was made to move forward with a \textbf{pytorch} backend due to more thorough availability of code examples and better documentation. The primary reference for our code was from a \textit{Medium} article \cite{usingbert}.
+
+Here is a high level diagram of our overall architecture:
+\begin{figure}
+  \center{\includegraphics[width=0.8\linewidth]{architecture.png}}
+  \caption{Architecture}
+  \label{fig:architecture}
+\end{figure}
+
+\newpage
 
 \section{Data}
 \label{sec:data}
@@ -176,6 +189,34 @@ Because the language used in a congressional debates is quite different than the
 \section{Experiments/Results}
 \paragraph{}
 TBD after we run some experiments
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{||c c c c c||} 
+ \hline
+ Train/Test & IBC & Convote & AllTheNews & Documents \\ [0.5ex] 
+ \hline\hline
+ IBC & 60\% & 22.8\% & 40\% & N/A \\ 
+ Convote & 20\% & 92.6\% & 63.5\% & 0\% \\
+ AllTheNews & 16.8\% & 60\% & 99.4\% & 65\% \\ [1ex]
+ \hline
+\end{tabular}
+\caption{Accuracy results marix}
+\label{table:1}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{||c c c c||} 
+ \hline
+ Metric & IBC & Convote & AllTheNews \\ [0.5ex] 
+ \hline\hline
+ Eval Loss & 0.99 & 0.23 & 0.02 \\ [1ex]
+ \hline
+\end{tabular}
+\caption{Evaluation loss}
+\label{table:1}
+\end{table}
 
 \section{Conclusion}
 \paragraph{}
