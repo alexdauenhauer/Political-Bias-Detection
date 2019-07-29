@@ -20,6 +20,13 @@ Mohit Iyyer, Peter Enns, Jordan Boyd-Graber, and Philip Resnik.
   Computational Linguistics (Volume 1: Long Papers)}, pages 1113--1122,
   Baltimore, Maryland, June 2014. Association for Computational Linguistics.
 
+\bibitem{usingbert}
+Thilina Rajapakse.
+\newblock A simple guide on using bert for binary text classification.
+\newblock
+  \url{https://medium.com/swlh/a-simple-guide-on-using-bert-for-text-classification-bbf041ac8d04},
+  2019.
+
 \bibitem{convote}
 Matt Thomas, Bo~Pang, and Lillian Lee.
 \newblock Get out the vote: Determining support or opposition from

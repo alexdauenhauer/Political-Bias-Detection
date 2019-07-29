@@ -1,46 +1,46 @@
-This is BibTeX, Version 0.99d (TeX Live 2018)
+This is BibTeX, Version 0.99d (TeX Live 2019/dev/Debian)
 Capacity: max_strings=100000, hash_size=100000, hash_prime=85009
 The top-level auxiliary file: Political Bias Detection with BERT.aux
 The style file: plain.bst
 Database file #1: bibliography.bib
-You've used 7 entries,
+You've used 8 entries,
             2118 wiz_defined-function locations,
-            542 strings with 5537 characters,
-and the built_in function-call counts, 2419 in all, are:
-= -- 242
-> -- 119
+            547 strings with 5722 characters,
+and the built_in function-call counts, 2629 in all, are:
+= -- 262
+> -- 126
 < -- 2
-+ -- 47
-- -- 40
-* -- 148
-:= -- 400
-add.period$ -- 23
-call.type$ -- 7
-change.case$ -- 41
++ -- 51
+- -- 42
+* -- 154
+:= -- 435
+add.period$ -- 26
+call.type$ -- 8
+change.case$ -- 45
 chr.to.int$ -- 0
-cite$ -- 7
-duplicate$ -- 96
-empty$ -- 186
-format.name$ -- 40
-if$ -- 522
+cite$ -- 8
+duplicate$ -- 103
+empty$ -- 208
+format.name$ -- 42
+if$ -- 568
 int.to.chr$ -- 0
-int.to.str$ -- 7
+int.to.str$ -- 8
 missing$ -- 5
-newline$ -- 38
-num.names$ -- 14
-pop$ -- 51
+newline$ -- 43
+num.names$ -- 16
+pop$ -- 59
 preamble$ -- 1
-purify$ -- 34
+purify$ -- 37
 quote$ -- 0
-skip$ -- 75
+skip$ -- 82
 stack$ -- 0
-substring$ -- 107
-swap$ -- 27
+substring$ -- 113
+swap$ -- 28
 text.length$ -- 2
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 28
+type$ -- 32
 warning$ -- 0
-while$ -- 20
-width$ -- 8
-write$ -- 82
+while$ -- 22
+width$ -- 9
+write$ -- 92

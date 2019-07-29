@@ -35,9 +35,11 @@ A cloud instance hosting an Nvidia P100 GPU was our environment for hosting our 
 
 Here is a high level diagram of our overall architecture:
 \begin{figure}
-  \center{\includegraphics[width=0.8\linewidth]{architecture.png}}
-  \caption{Architecture}
-  \label{fig:architecture}
+	\begin{center}
+		\includegraphics[width=0.8\linewidth]{architecture.png}
+		\caption{Architecture}
+		\label{fig:architecture}
+	\end{center}
 \end{figure}
 
 \newpage
@@ -60,7 +62,7 @@ The Convote dataset is a corpus of congressional speeches with each speech treat
 \paragraph{}
 It would be extremely unreasonable to assume that every sentence spoken by a member of congress during a congressional debate would contain ideological bias. In fact, a large portion of the sentences in the Convote dataset contain no bias at all.\footnote{Many sentences are simply opinion statements on whether or not the speaker agrees with the bill, or parliamentary jargon such as addressing the Speaker of the House, or urging their colleagues to vote a certain way, etc.} Therefore, it is necessary to filter this dataset for sentences that explicitly contain bias. 
 
-To select the explicitly biased sentences from the dataset, we used a method inspired by Yano, et al. \cite{YanoBigrams} and shown to be successful as a bias identifier by Iyyer, et al. We started by identifying the most frequently used trigrams and bigrams for each label (liberal and conservative). We then filtered out any trigrams or bigrams which contained stopwords, and English names\footnote{Removing stopwords serves the purpose of eliminating trigrams and bigrams that don't contain substance for bias. Removing English names was a strategy that proved effective in filtering the all-the-news dataset, and was applied here as well, but essentially serves the purpose of removing n-grams that are sourced from replies to other speakers that address the other speaker by name}. We then filtered the bigrams further by requiring that at least one word in the bigram contain an "opinion" defined as a word found in the \texttt{opinion\_lexicon} corpus from NLTK\footnote{This method intends to select only those phrases that contain an ideological opinion which would typically be seen as a strong indicator of bias, when spoken by someone with known political affiliation. We decided to not make this a requirement for the trigrams as we felt these phrases would be unique enough to each ideology as they were that we did not want to lose information by filtering too heavily.}. We then took the set difference of the resulting top 1000 most frequent liberal and conservative n-grams (i.e. out of the top 1000 liberal bigrams, we only kept those that did not appear in the top 1000 conservative bigrams and vice versa, same for trigrams). This left us with 665 bigrams from each label and 751 trigrams from each label. We kept the top 100 filtered bigrams and top 100 filtered trigrams for each label as our bias indicators. We then filtered sentences such that, if a democratic speaker spoke a sentence that contained one of these top 200 "liberal" n-grams, we labeled that sentence as "liberal" and used the same logic applied to republican speakers to identify "conservative" sentences. For this dataset, we identified a neutral sentence as one which was spoken by an independent politician and contained no n-grams from either the liberal or conservative bias indicators. The top 10 n-grams from each label are shown in Table \ref{tab:ngrams-convote}. The resulting dataset included 1326 conservative sentences, 1383 liberal sentences and 213 neutral sentences. Example sentences from each ideology label are shown in Table \ref{tab:convote-sentences}.
+To select the explicitly biased sentences from the dataset, we used a method inspired by Yano, et al. \cite{YanoBigrams} and shown to be successful as a bias identifier by Iyyer, et al. We started by identifying the most frequently used trigrams and bigrams for each label (liberal and conservative). We then filtered out any trigrams or bigrams which contained stopwords, and English names\footnote{Removing stopwords serves the purpose of eliminating trigrams and bigrams that don't contain substance for bias. Removing English names was a strategy that proved effective in filtering the all-the-news dataset, and was applied here as well, but essentially serves the purpose of removing n-grams that are sourced from replies to other speakers that address the other speaker by name}. We further filtered the bigrams list by requiring that at least one word in each bigram contain an "opinion" defined as a word found in the \texttt{opinion\_lexicon} corpus from NLTK\footnote{This method intends to select only those phrases that contain an ideological opinion which would typically be seen as a strong indicator of bias, when spoken by someone with known political affiliation. We decided to not make this a requirement for the trigrams as we felt these phrases would be unique enough to each ideology without this additional criteria that we did not want to lose information by filtering too heavily.}. We then took the set difference of the resulting top 1000 most frequent liberal and conservative n-grams (i.e. out of the top 1000 liberal bigrams, we only kept those that did not appear in the top 1000 conservative bigrams and vice versa, same for trigrams). We kept the top 100 filtered bigrams and top 100 filtered trigrams for each label as our bias indicators. We then filtered sentences such that, if a democratic speaker spoke a sentence that contained one of these top 200 "liberal" n-grams, we labeled that sentence as "liberal" and used the same logic applied to republican speakers to identify "conservative" sentences. For this dataset, we identified a neutral sentence as one which was spoken by an independent politician and contained no n-grams from either the liberal or conservative bias indicators. The top 10 n-grams from each label are shown in Table \ref{tab:ngrams-convote}. The resulting dataset included 1326 conservative sentences, 1383 liberal sentences and 213 neutral sentences. Example sentences from each ideology label are shown in Table \ref{tab:convote-sentences}.
 
 \begin{table}[h!]
 	\begin{center}
@@ -130,7 +132,6 @@ To expand our training data further with a greater diversity of authors, we turn
 			New York Post & right-center & conservative \\
 			Guardian & left-center & liberal \\
 			NPR & left-center & liberal \\
-			\rowcolor{Gray}
 			Reuters & neutral & neutral \\
 			\rowcolor{Gray}
 			Vox & left & liberal \\
@@ -143,12 +144,12 @@ To expand our training data further with a greater diversity of authors, we turn
 \subsubsection{Filtering All-the-news for Bias at the Sentence Level}
 \label{sec:filtering2}
 \paragraph{}
-Because the language used in a congressional debates is quite different than the language typically used in everyday journalism, the n-grams that we found in the Convote dataset don't crossover very well to the all-the-news dataset. Therefore we determine a new set of n-grams for the news article dataset. We applied a similar filtering method to the one explained in section \ref{sec:filtering} to filter sentences containing explicit bias. We first took a subset of publishers with the most extreme MBFC bias labels to determine biased n-grams from. This subset is indicated by the highlighted rows in Table \ref{tab:pub-bias}. From this subset, we selected n-grams that indicate bias similarly to the methods applied to the Convote set\footnote{We removed stopwords using a custom stopwords list, removed English names and required bigrams to include one "opinion" word. This is to remove boilerplate sentences, sentences that reference the author of a particular article and taglines such as "associated press", "bestselling author", "conservative columnist", etc.}. The resulting n-grams are shown in Table \ref{tab:bigrams-atn}. Using these n-grams to select sentences that contained bias led to a dataset which contained 16,745 conservative sentences, 28,230 liberal sentences, 277,751 neutral sentences. To balance the dataset and avoid weighting strategies while training, we pared this down to a random selection of 16,000 sentences from each label, for a total of 48,000 sentences. 
+Because the language used in a congressional debates is quite different than the language typically used in everyday journalism, the n-grams that we found in the Convote dataset don't crossover very well to the all-the-news dataset. Therefore we determine a new set of n-grams for the news article dataset. We applied a similar filtering method to the one explained in section \ref{sec:filtering} to filter sentences containing explicit bias. We first took a subset of publishers with the most extreme MBFC bias labels to determine biased n-grams from. This subset is indicated by the highlighted rows in Table \ref{tab:pub-bias}. From this subset, we selected n-grams that indicate bias similarly to the methods applied to the Convote set\footnote{We removed stopwords using a custom stopwords list, removed English names and required bigrams to include one "opinion" word. This is to remove boilerplate sentences, sentences that reference the author of a particular article and taglines such as "associated press", "bestselling author", "conservative columnist", etc.}. We kept the top 100 trigrams and bigrams, for a total set of 200 n-grams for each label, the top 10 of which are shown in Table \ref{tab:ngrams-atn}. Using these n-grams to select sentences that contained bias led to a dataset which contained 16,745 conservative sentences, 28,230 liberal sentences, 277,751 neutral sentences. To balance the dataset and avoid weighting strategies while training, we pared this down to a random selection of 16,000 sentences from each label, for a total of 48,000 sentences. 
 
 \begin{table}[h!]
 	\begin{center}
 		\caption{Top 10 n-grams per ideology label - All-the-news}
-		\label{tab:bigrams-atn}
+		\label{tab:ngrams-atn}
 		\begin{tabular}{p{0.2\linewidth}|p{0.2\linewidth}|p{0.2\linewidth}|p{0.2\linewidth}}
 			\hline\hline
 			\multicolumn{2}{c|}{\textbf{Liberal}} & \multicolumn{2}{c|}{\textbf{Conservative}} \\
@@ -192,31 +193,46 @@ TBD after we run some experiments
 
 \begin{table}[h!]
 \centering
-\begin{tabular}{||c c c c c||} 
+\caption{Accuracy Results Matrix}
+\begin{tabular}{c||c|c|c|c||c} 
  \hline
- Train/Test & IBC & Convote & AllTheNews & Documents \\ [0.5ex] 
+ \textbf{Train/Test} & \textbf{IBC} & \textbf{Convote} & \textbf{AllTheNews} & \textbf{Documents} & \textbf{Evaluation Loss} \\ [0.5ex] 
  \hline\hline
- IBC & 60\% & 22.8\% & 40\% & N/A \\ 
- Convote & 20\% & 92.6\% & 63.5\% & 0\% \\
- AllTheNews & 16.8\% & 60\% & 99.4\% & 65\% \\ [1ex]
+ \textbf{IBC} & 60\% & 22.8\% & 40\% & N/A & 0.99 \\ 
+ \textbf{Convote} & 20\% & 92.6\% & 63.5\% & 0\% & 0.23\\
+ \textbf{AllTheNews} & 16.8\% & 60\% & 99.4\% & 65\% & 0.02 \\ [1ex]
  \hline
 \end{tabular}
-\caption{Accuracy results marix}
-\label{table:1}
+\label{table:results}
 \end{table}
 
-\begin{table}[h!]
-\centering
-\begin{tabular}{||c c c c||} 
- \hline
- Metric & IBC & Convote & AllTheNews \\ [0.5ex] 
- \hline\hline
- Eval Loss & 0.99 & 0.23 & 0.02 \\ [1ex]
- \hline
-\end{tabular}
-\caption{Evaluation loss}
-\label{table:1}
-\end{table}
+%\begin{table}[h!]
+%\centering
+%\begin{tabular}{||c c c c c||} 
+% \hline
+% \textbf{Train/Test} & \textbf{IBC} & \textbf{Convote} & \textbf{AllTheNews} & \textbf{Documents} \\ [0.5ex] 
+% \hline\hline
+% IBC & 60\% & 22.8\% & 40\% & N/A \\ 
+% Convote & 20\% & 92.6\% & 63.5\% & 0\% \\
+% AllTheNews & 16.8\% & 60\% & 99.4\% & 65\% \\ [1ex]
+% \hline
+%\end{tabular}
+%\caption{Accuracy results matrix}
+%\label{table:1}
+%\end{table}
+%
+%\begin{table}[h!]
+%\centering
+%\begin{tabular}{||c c c c||} 
+% \hline
+% Metric & IBC & Convote & AllTheNews \\ [0.5ex] 
+% \hline\hline
+% Eval Loss & 0.99 & 0.23 & 0.02 \\ [1ex]
+% \hline
+%\end{tabular}
+%\caption{Evaluation loss}
+%\label{table:1}
+%\end{table}
 
 \section{Conclusion}
 \paragraph{}
