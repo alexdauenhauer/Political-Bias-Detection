@@ -9,6 +9,7 @@ linkcolor=red}
 \usepackage{graphicx}
 \definecolor{Gray}{gray}{0.85}
 \usepackage{tabularx}
+\usepackage{float}
 
 %opening
 \title{Political Ideology Bias Detection with BERT}
@@ -31,16 +32,15 @@ In this paper, we build off of previous work done by Iyyer et al. \cite{iyyerRNN
 \section{Model \& Architecture}
 BERT (Bidirectional Encoder Representations from Transformers) was released late last year by Google. The main draw towards the use of BERT for this project was leveraging the bi-directional training transformer to help detect political bias in text. For more information regarding BERT please refer to this \href{https://arxiv.org/abs/1810.04805}{research paper} from Google.
 
-A cloud instance hosting an Nvidia P100 GPU was our environment for hosting our data as well as deploying our model for testing. This infrastructure limited us to use the BERT \textit{base} models. No significant difference was found between \textit{cased} and \textit{uncased} so we decided to move forward with \textit{BERT-Base, Cased}. The decision was made to move forward with a \textbf{pytorch} backend due to more thorough availability of code examples and better documentation. The primary reference for our code was from a \textit{Medium} article \cite{usingbert}. A high level diagram of our overall architecture is shown in Figure \ref{fig:architecture}:
-\begin{figure}
+A cloud instance hosting an Nvidia P100 GPU was our environment for hosting our data as well as deploying our model for training and evaluation. This infrastructure limited us to use the BERT \textit{base} models as the GPU would continually run out of memory with the slightly larger models. No significant difference was found between \textit{cased} and \textit{uncased} for the textit{base} models so we decided to move forward with \textit{BERT-Base, Cased}. The decision was made to move forward with a \textbf{pytorch} backend due to more thorough availability of code examples and better documentation. The primary reference for our code was from a \textit{Medium} article \cite{usingbert}. A high level diagram of our overall architecture is shown in Figure \ref{fig:architecture}:
+\begin{figure}[h]
 	\begin{center}
 		\includegraphics[width=0.8\linewidth]{architecture.png}
 		\caption{Architecture}
 		\label{fig:architecture}
 	\end{center}
 \end{figure}
-
-\newpage
+Data was obtained from three different sources and funneled into a pre-processing step. This involved generating sentences with labels of liberal, neutral, or conservative and formatting the data into a tsv that BERT would accept. We then perform a random 70:30 train/dev split. Train data is fed into our BERT train script and the generated model is saved and funneled into our BERT eval script. The model is then evaluated on the dev data. An averaging classification layer is added as part of post-processing for documents. Let's take a look at what all is moving through our pipeline. 
 
 \section{Data}
 \label{sec:data}
@@ -176,12 +176,19 @@ To select the explicitly biased sentences from the data, we used a method inspir
 \end{table}
 
 \section{Experiments/Results}
-\paragraph{}
-TBD after we run some experiments
+When experimenting with BERT we found the following configuration of BERT parameters to provide the best results: $MAX\_SEQ\_LEN = 256$, $TRAIN\_BATCH\_SIZE = 16$, $LEARNING\_RATE = 2e-6$, \newline
+$NUM\_TRAIN\_EPOCHS = 3$. The $MAX\_SEQ\_LEN$ and $TRAIN\_BATCH\_SIZE$ are the maximum possible values selected given we were using an Nvidia P100 and concurrently dependent on our Cuda version. The $LEARNING\_RATE$ is the default provided by BERT. $NUM\_TRAIN\_EPOCHS$ was set to 3 after continuous experimentation and analysis of the evaluation loss which saturated after about 2.5 epochs. These parameters remained the same for all three datasets.
 
-\begin{table}[h!]
+As seen in Table \ref{tab:res-mat}, the textit{IBC} dataset had the worst performance both on itself as well as the other datasets. The evaluation accuracy is highest on itself, followed by textit{AllTheNews} with an accuracy of 40\%, and then textit{Convote} with an accuracy of 40\%. What is surprising is that f1 scores are higher than accuracy on all the datasets besides itself. The evaluation loss saturated at 0.99 (Table \ref{tab:eval-loss}) hinting at the fact that the dataset is fairly small.
+
+The textit{Convote} had fairly good performance with an evaluation accuracy of 91\% on itself. It had an accuracy of 63.5\% on textit{AllTheNews} which is significantly better than textit{IBC}. Lowest evaluation accuracy was on textit{IBC} at 20\%. F1 scores very closely mirrored their respective accuracies. The evaluation loss improved when compared to textit{IBC} at 0.23. Again, the evaluation loss saturated and despite having more data than textit{IBC} we still might not have enough.
+
+The best performance of all the datasets was from textit{AllTheNews} with an evaluation accuracy of 99.4\% on itself. It had a similar evaluation accuracy on textit{IBC} to that of textit{Convote}. On the textit{Convote} dataset it obtained an evaluation accuracy of 60\%. The f1 scores were lower on the textit{IBC} and textit{Convote} when compared to the evaluation accuracies. We saw the lowest evaluation loss at 0.02 which is significantly better than any of the other datasets.
+
+\begin{table}[H]
 \centering
 \caption{Results Matrix}
+\label{tab:res-mat}
 \begin{tabular}{p{0.15\linewidth}||p{0.08\linewidth}|p{0.08\linewidth}|p{0.08\linewidth}|p{0.08\linewidth}|p{0.08\linewidth}|p{0.08\linewidth}|p{0.08\linewidth}|p{0.08\linewidth}}
  \hline
  %\multirow{rows}[]{width}[]{text}[0.5ex]
@@ -215,7 +222,7 @@ TBD after we run some experiments
 \begin{table}[h!]
 \centering
 \caption{Evaluation loss}
-\label{table:1}
+\label{tab:eval-loss}
 \begin{tabular}{c|c|c} 
  \hline\hline
  \textbf{IBC} & \textbf{Convote} & \textbf{AllTheNews} \\ [0.5ex] 
