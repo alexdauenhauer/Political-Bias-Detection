@@ -10,6 +10,7 @@ linkcolor=red}
 \definecolor{Gray}{gray}{0.85}
 \usepackage{tabularx}
 \usepackage{float}
+\usepackage{multirow}
 
 %opening
 \title{Political Ideology Bias Detection with BERT}
@@ -27,12 +28,12 @@ In this paper, we attempt to use Google's recently released BERT model to detect
 \label{intro}
 Political ideology bias in news sources is a topic of growing concern, not just in the U.S., but across the entire world. As our country grows ever more partisan and misinformation campaigns fuel distrust in mainstream news sources, people have a tendency to turn to alternative news sources which typically reflect the existing ideology bias of the author. This creates echo chambers and reinforces existing partisan ideologies driving the partisan divide ever wider. The ability to automatically label biased text could inform readers that may have otherwise assumed the content was neutral, and encourage them to pursue alternative sources with less bias, or at the very least maintain a degree of skepticism about the content they are consuming. A system like this could also help media sources reduce the amount of bias they include their reporting, some of which may be unconscious and therefore undetected by writers or editors. Using this tool as a proofreader of sorts could eventually, hopefully reduce the amount of bias in media and reduce the growing partisan divide.
 
-In this paper, we build off of previous work done by Iyyer et al. \cite{iyyerRNN}. Their success in using an RNN model to predict ideological bias at the sentence level, inspired us to expand on their experiments using BERT \cite{bert}, a modern transformer-based model that achieves state-of-the-art results on a number of different NLP problems\footnote{At the time this sentence was written}. We use a BERT implementation for sequence classification to predict ideological bias at the sentence level on three unique datasets. We use a processed subset of sentences from the Ideological Books Corpus (IBC) \cite{gross2013ibc}. We also use a filtering method explained in section \ref{sec:filtering} to select a set of biased sentences from the Convote dataset \cite{convote}. Additionally, we build a new dataset using the filtering method explained in section \ref{sec:filtering2} news articles from 15 different publishers \cite{news}, with bias labels sourced from mediabiasfactcheck.com (MBFC) \cite{mbfc}. We predict bias at the sentence level, then use the aggregate sentence level predictions to predict bias at a document level and compare to the publisher label assigned by the MBFC team. which  described in greater detail in section \ref{sec:data}
+In this paper, we build off of previous work done by Iyyer et al. \cite{iyyerRNN}. Their success in using an RNN model to predict ideological bias at the sentence level, inspired us to expand on their experiments using BERT \cite{bert}, a modern transformer-based model that achieves state-of-the-art results\footnote{At the time this sentence was written} on a number of different NLP problems. We use a BERT implementation for sequence classification to predict ideological bias at the sentence level on three unique datasets. We use a processed subset of sentences from the Ideological Books Corpus (IBC) \cite{gross2013ibc}. We also use a filtering method explained in section \ref{sec:filtering} to select a set of biased sentences from the Convote dataset \cite{convote}. Additionally, we build a new dataset by filtering a corpus of news articles from 15 different publishers \cite{news}, with bias labels sourced from mediabiasfactcheck.com (MBFC) \cite{mbfc}. We predict bias at the sentence level, then use the aggregate sentence level predictions to predict bias at a document level and compare to the publisher label assigned by the MBFC team. which  described in greater detail in section \ref{sec:data}
 
 \section{Model \& Architecture}
 BERT (Bidirectional Encoder Representations from Transformers) was released late last year by Google. The main draw towards the use of BERT for this project was leveraging the bi-directional training transformer to help detect political bias in text. For more information regarding BERT please refer to this \href{https://arxiv.org/abs/1810.04805}{research paper} from Google.
 
-A cloud instance hosting an Nvidia P100 GPU was our environment for hosting our data as well as deploying our model for training and evaluation. This infrastructure limited us to use the BERT \textit{base} models as the GPU would continually run out of memory with the slightly larger models. No significant difference was found between \textit{cased} and \textit{uncased} for the textit{base} models so we decided to move forward with \textit{BERT-Base, Cased}. The decision was made to move forward with a \textbf{pytorch} backend due to more thorough availability of code examples and better documentation. The primary reference for our code was from a \textit{Medium} article \cite{usingbert}. A high level diagram of our overall architecture is shown in Figure \ref{fig:architecture}:
+A cloud instance hosting an Nvidia P100 GPU was our environment for hosting our data as well as deploying our model for training and evaluation. This infrastructure limited us to use the BERT \textit{base} models as the GPU would continually run out of memory with the slightly larger models. No significant difference was found between \textit{cased} and \textit{uncased} for the \textit{base} models so we decided to move forward with \textit{BERT-Base, Cased}. The decision was made to move forward with a \textbf{pytorch} backend due to more thorough availability of code examples and better documentation. The primary reference for our code was from a \textit{Medium} article \cite{usingbert}. A high level diagram of our overall architecture is shown in Figure \ref{fig:architecture}:
 \begin{figure}[h]
 	\begin{center}
 		\includegraphics[width=0.8\linewidth]{architecture.png}
@@ -179,11 +180,11 @@ To select the explicitly biased sentences from the data, we used a method inspir
 When experimenting with BERT we found the following configuration of BERT parameters to provide the best results: $MAX\_SEQ\_LEN = 256$, $TRAIN\_BATCH\_SIZE = 16$, $LEARNING\_RATE = 2e-6$, \newline
 $NUM\_TRAIN\_EPOCHS = 3$. The $MAX\_SEQ\_LEN$ and $TRAIN\_BATCH\_SIZE$ are the maximum possible values selected given we were using an Nvidia P100 and concurrently dependent on our Cuda version. The $LEARNING\_RATE$ is the default provided by BERT. $NUM\_TRAIN\_EPOCHS$ was set to 3 after continuous experimentation and analysis of the evaluation loss which saturated after about 2.5 epochs. These parameters remained the same for all three datasets.
 
-As seen in Table \ref{tab:res-mat}, the textit{IBC} dataset had the worst performance both on itself as well as the other datasets. The evaluation accuracy is highest on itself, followed by textit{AllTheNews} with an accuracy of 40\%, and then textit{Convote} with an accuracy of 40\%. What is surprising is that f1 scores are higher than accuracy on all the datasets besides itself. The evaluation loss saturated at 0.99 (Table \ref{tab:eval-loss}) hinting at the fact that the dataset is fairly small.
+As seen in Table \ref{tab:res-mat}, the \textit{IBC} dataset had the worst performance both on itself as well as the other datasets. The evaluation accuracy is highest on itself, followed by \textit{AllTheNews} with an accuracy of 40\%, and then \textit{Convote} with an accuracy of 40\%. What is surprising is that f1 scores are higher than accuracy on all the datasets besides itself. The evaluation loss saturated at 0.99 (Table \ref{tab:eval-loss}) hinting at the fact that the dataset is fairly small.
 
-The textit{Convote} had fairly good performance with an evaluation accuracy of 91\% on itself. It had an accuracy of 63.5\% on textit{AllTheNews} which is significantly better than textit{IBC}. Lowest evaluation accuracy was on textit{IBC} at 20\%. F1 scores very closely mirrored their respective accuracies. The evaluation loss improved when compared to textit{IBC} at 0.23. Again, the evaluation loss saturated and despite having more data than textit{IBC} we still might not have enough.
+The \textit{Convote} had fairly good performance with an evaluation accuracy of 91\% on itself. It had an accuracy of 63.5\% on \textit{AllTheNews} which is significantly better than \textit{IBC}. Lowest evaluation accuracy was on \textit{IBC} at 20\%. F1 scores very closely mirrored their respective accuracies. The evaluation loss improved when compared to \textit{IBC} at 0.23. Again, the evaluation loss saturated and despite having more data than \textit{IBC} we still might not have enough.
 
-The best performance of all the datasets was from textit{AllTheNews} with an evaluation accuracy of 99.4\% on itself. It had a similar evaluation accuracy on textit{IBC} to that of textit{Convote}. On the textit{Convote} dataset it obtained an evaluation accuracy of 60\%. The f1 scores were lower on the textit{IBC} and textit{Convote} when compared to the evaluation accuracies. We saw the lowest evaluation loss at 0.02 which is significantly better than any of the other datasets.
+The best performance of all the datasets was from \textit{AllTheNews} with an evaluation accuracy of 99.4\% on itself. It had a similar evaluation accuracy on \textit{IBC} to that of \textit{Convote}. On the \textit{Convote} dataset it obtained an evaluation accuracy of 60\%. The f1 scores were lower on the \textit{IBC} and \textit{Convote} when compared to the evaluation accuracies. We saw the lowest evaluation loss at 0.02 which is significantly better than any of the other datasets.
 
 \begin{table}[H]
 \centering
@@ -191,9 +192,8 @@ The best performance of all the datasets was from textit{AllTheNews} with an eva
 \label{tab:res-mat}
 \begin{tabular}{p{0.15\linewidth}||p{0.08\linewidth}|p{0.08\linewidth}|p{0.08\linewidth}|p{0.08\linewidth}|p{0.08\linewidth}|p{0.08\linewidth}|p{0.08\linewidth}|p{0.08\linewidth}}
  \hline
- %\multirow{rows}[]{width}[]{text}[0.5ex]
- \textbf{Train/Test} & \multicolumn{2}{c|}{\textbf{IBC}} & \multicolumn{2}{c|}{\textbf{Convote}} & \multicolumn{2}{c|}{\textbf{AllTheNews}} & \multicolumn{2}{c}{\textbf{Documents}} \\ 
- \hline
+  \multirow{2}{*}{\textbf{Train/Test}} & \multicolumn{2}{c|}{\textbf{IBC}} & \multicolumn{2}{c|}{\textbf{Convote}} & \multicolumn{2}{c|}{\textbf{AllTheNews}} & \multicolumn{2}{c}{\textbf{Documents}} \\ 
+  \cline{2-9}
   & \footnotesize{\textbf{Accuracy}} & \footnotesize{\textbf{F1-score}} & \footnotesize{\textbf{Accuracy}} & \footnotesize{\textbf{F1-score}} & \footnotesize{\textbf{Accuracy}} & \footnotesize{\textbf{F1-score}} & \footnotesize{\textbf{Accuracy}} & \footnotesize{\textbf{F1-score}} \\
  \hline\hline
  \textbf{IBC} & \centering 60\% & \centering 56.8\% & \centering 22.8\% & \centering 28.6\% & \centering 40\% & \centering 49\% & \centering N/A & \multicolumn{1}{c}{N/A} \\ 
@@ -204,21 +204,6 @@ The best performance of all the datasets was from textit{AllTheNews} with an eva
 \label{table:results}
 \end{table}
 
-%\begin{table}[h!]
-%\centering
-%\begin{tabular}{||c c c c c||} 
-% \hline
-% \textbf{Train/Test} & \textbf{IBC} & \textbf{Convote} & \textbf{AllTheNews} & \textbf{Documents} \\ [0.5ex] 
-% \hline\hline
-% IBC & 60\% & 22.8\% & 40\% & N/A \\ 
-% Convote & 20\% & 92.6\% & 63.5\% & 0\% \\
-% AllTheNews & 16.8\% & 60\% & 99.4\% & 65\% \\ [1ex]
-% \hline
-%\end{tabular}
-%\caption{Accuracy results matrix}
-%\label{table:1}
-%\end{table}
-%
 \begin{table}[h!]
 \centering
 \caption{Evaluation loss}
@@ -252,14 +237,14 @@ To further develop this model and improve the usefulness of it at the document l
 \bibliographystyle{plain}
 \bibliography{bibliography}
 
-\appendix
-\section{Appendix}
-\textbf{NOT SURE IF WE NEED THIS BUT DIDN'T WANT TO DELETE IT YET}
-\subsubsection{Filtering All-the-news for Bias at the Sentence Level}
-\label{sec:filtering2}
-Because the language used in a congressional debates is quite different than the language typically used in everyday journalism, the n-grams that we found in the Convote dataset don't crossover very well to the all-the-news dataset. Therefore we determine a new set of n-grams for the news article dataset. We applied a similar filtering method to the one explained in section \ref{sec:filtering} to filter sentences containing explicit bias. We first took a subset of publishers with the most extreme MBFC bias labels to determine biased n-grams from. This subset is indicated by the highlighted rows in Table \ref{tab:pub-bias}. From this subset, we selected n-grams that indicate bias similarly to the methods applied to the Convote set\footnote{We removed stopwords using a custom stopwords list, removed English names and required bigrams to include one "opinion" word. This is to remove boilerplate sentences, sentences that reference the author of a particular article and taglines such as "associated press", "bestselling author", "conservative columnist", etc.}. We kept the top 100 trigrams and bigrams, for a total set of 200 n-grams for each label, the top 10 of which are shown in Table \ref{tab:ngrams-atn}. Using these n-grams to select sentences that contained bias led to a dataset which  
-
-\subsubsection{Conclusion}
-One interesting finding we had was that training and testing with the IBC corpus, does not come close to the same level of performance as training and testing with Convote or, all-the-news. This is not due to lack of data, as the IBC corpus is larger than the resulting Convote set that we trained with. This is likely capturing some of the differences in labeling bias using a subjective approach vs. an objective approach. While the sentences in the IBC corpus are selected by requiring n-gram presence, the labeling of the resulting set is performed by humans \cite{iyyerRNN}. Our approach to labeling the Convote and all-the-news corpora is somewhat more restrictive. We require that the sentence contain at least one phrase from a list of 100 trigrams and 100 bigrams (for each ideology), and that the bigrams contain at least one "opinion" word. This limits the subject matter that will be contained by the sentences that the model gets trained on. In contrast, the IBC corpus is selected by requiring the presence of at least one bigram or unigram from a list of 433 liberal bigrams and 535 conservative bigrams (with no requirement for of containing an "opinion" word) a list of 25 emotional lexicons from Pennebaker's LIWC dictionary \cite{YanoBigrams}. Therefore, the IBC corpus contains a wider variety of sentence content relative to the original book content the sentences were extracted from, yet it is still a fairly small dataset at only ~4,000 sentences. 
+%\appendix
+%\section{Appendix}
+%\textbf{NOT SURE IF WE NEED THIS BUT DIDN'T WANT TO DELETE IT YET}
+%\subsubsection{Filtering All-the-news for Bias at the Sentence Level}
+%\label{sec:filtering2}
+%Because the language used in a congressional debates is quite different than the language typically used in everyday journalism, the n-grams that we found in the Convote dataset don't crossover very well to the all-the-news dataset. Therefore we determine a new set of n-grams for the news article dataset. We applied a similar filtering method to the one explained in section \ref{sec:filtering} to filter sentences containing explicit bias. We first took a subset of publishers with the most extreme MBFC bias labels to determine biased n-grams from. This subset is indicated by the highlighted rows in Table \ref{tab:pub-bias}. From this subset, we selected n-grams that indicate bias similarly to the methods applied to the Convote set\footnote{We removed stopwords using a custom stopwords list, removed English names and required bigrams to include one "opinion" word. This is to remove boilerplate sentences, sentences that reference the author of a particular article and taglines such as "associated press", "bestselling author", "conservative columnist", etc.}. We kept the top 100 trigrams and bigrams, for a total set of 200 n-grams for each label, the top 10 of which are shown in Table \ref{tab:ngrams-atn}. Using these n-grams to select sentences that contained bias led to a dataset which  
+%
+%\subsubsection{Conclusion}
+%One interesting finding we had was that training and testing with the IBC corpus, does not come close to the same level of performance as training and testing with Convote or, all-the-news. This is not due to lack of data, as the IBC corpus is larger than the resulting Convote set that we trained with. This is likely capturing some of the differences in labeling bias using a subjective approach vs. an objective approach. While the sentences in the IBC corpus are selected by requiring n-gram presence, the labeling of the resulting set is performed by humans \cite{iyyerRNN}. Our approach to labeling the Convote and all-the-news corpora is somewhat more restrictive. We require that the sentence contain at least one phrase from a list of 100 trigrams and 100 bigrams (for each ideology), and that the bigrams contain at least one "opinion" word. This limits the subject matter that will be contained by the sentences that the model gets trained on. In contrast, the IBC corpus is selected by requiring the presence of at least one bigram or unigram from a list of 433 liberal bigrams and 535 conservative bigrams (with no requirement for of containing an "opinion" word) a list of 25 emotional lexicons from Pennebaker's LIWC dictionary \cite{YanoBigrams}. Therefore, the IBC corpus contains a wider variety of sentence content relative to the original book content the sentences were extracted from, yet it is still a fairly small dataset at only ~4,000 sentences. 
 
 \end{document}
