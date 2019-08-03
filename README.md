@@ -19,14 +19,14 @@ This repo attempts to bring to life our goal for our final project for W266. Hel
     
 ### Data
   - `all-the-news.ipynb`
-    - //TBD
+    - This file is used for exploring, processing and filtering the *AllTheNews* corpus
   - `convote.ipynb`
-    - //TBD
+    - This file is used for exploring, processing and filtering the *Convote* corpus
   - `loadIBC.py`
-    - //TBD
+    - This is a helper script for loading the IBC data, provided by Mohit Iyyer
   - `prelimDataExploration.ipynb`
-    - //TBD
+    - This file is used for exploring and processing the *IBC* corpus
   - `treeUtil.py`
-    - //TBD
+    - This is a helper library for parsing and manipulating the custom data format of the IBC data, provided by Mohit Iyyer
     
 The analysis and conclusions of our experiments can be found in the [final report](https://github.com/ahsenq/w266_final_project/blob/master/PoliticalBias_finalReport/Political%20Bias%20Detection%20with%20BERT.pdf).
